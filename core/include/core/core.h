@@ -1,5 +1,7 @@
 #pragma once
 
+#define core_sizeof(a) static_cast<::core::sz>(sizeof(a))
+
 namespace core
 {
     using i8 = char;
@@ -19,4 +21,46 @@ namespace core
     static_assert(sizeof(u16) == 2, "sizeof(u16) != 2");
     static_assert(sizeof(u32) == 4, "sizeof(u32) != 4");
     static_assert(sizeof(u64) == 8, "sizeof(u64) != 8");
+
+    // Signed size type
+    using sz = decltype(static_cast<int*>(nullptr) - static_cast<int*>(nullptr));
+
+    template<class T> struct remove_reference { typedef T type; };
+    template<class T> struct remove_reference<T&> { typedef T type; };
+    template<class T> struct remove_reference<T&&> { typedef T type; };
+    template<class T> using remove_reference_t = typename remove_reference<T>::type;
+
+    template< class T >
+    constexpr remove_reference_t<T>&& move(T&& t) noexcept
+    {
+        return static_cast<typename remove_reference<T>::type&&>(t);
+    }
+
+    // Allocation function pointer
+    using allocfn = void* (*)(sz);
+    // Deallocation function pointer
+    using freefn = void (*)(void*);
+
+    // Allocation strategy
+    struct alloc_strat
+    {
+        allocfn alloc; // Allocation function (required)
+        freefn free; // Deallocation function (optional)
+    };
+
+    // Owning handle to a chunk of memory
+    class mem
+    {
+    public:
+        mem(sz size, alloc_strat alloc_strat = {});
+        ~mem() noexcept;
+        mem(const mem&) = delete;
+        mem(mem&&) noexcept;
+        mem& operator=(const mem&) = delete;
+        mem& operator=(mem&&) noexcept;
+    private:
+        sz m_size;
+        alloc_strat m_alloc_strat;
+        void* m_bytes;
+    };
 }
