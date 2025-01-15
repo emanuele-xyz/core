@@ -1,0 +1,9 @@
+# visual studio
+.vs
+
+# visual studio user specific files
+*.user
+
+# build folders
+.bin
+.tmp
