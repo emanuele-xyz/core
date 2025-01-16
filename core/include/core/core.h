@@ -28,11 +28,11 @@ namespace core
     // Generic pointer type
     using ptr = char*;
 
-    template<class T> struct remove_reference { typedef T type; };
-    template<class T> struct remove_reference<T&> { typedef T type; };
-    template<class T> struct remove_reference<T&&> { typedef T type; };
-    template<class T> using remove_reference_t = typename remove_reference<T>::type;
-    template< class T >
+    template<typename T> struct remove_reference { typedef T type; };
+    template<typename T> struct remove_reference<T&> { typedef T type; };
+    template<typename T> struct remove_reference<T&&> { typedef T type; };
+    template<typename T> using remove_reference_t = typename remove_reference<T>::type;
+    template< typename T >
     constexpr remove_reference_t<T>&& move(T&& t) noexcept
     {
         return static_cast<typename remove_reference<T>::type&&>(t);
@@ -50,21 +50,21 @@ namespace core
         freefn free; // Deallocation function (optional)
     };
 
-    // View on a sequence of elements
-    template <class T>
-    class view
+    // View on a contiguous chunk of memory
+    class mem_view
     {
     public:
-        view(T* start, T* end) noexcept : start{ start }, end{ end } {}
+        inline mem_view(void* start, void* end) : m_start{ start }, m_end{ end } { /*TODO: assert for start <= end*/ }
+    public:
+        inline void* start() const noexcept { return m_start; }
+        inline void* end() const noexcept { return m_end; }
+        inline sz size() const noexcept { return static_cast<ptr>(m_end) - static_cast<ptr>(m_start); }
     private:
-        T* start;
-        T* end;
+        void* m_start;
+        void* m_end;
     };
 
-    // View on a raw chunk of memory
-    using mem_view = view<void>;
-
-    // Owning handle to a chunk of memory
+    // Owning handle to a contiguous chunk of memory
     class mem
     {
     public:
@@ -75,10 +75,50 @@ namespace core
         mem& operator=(const mem&) = delete;
         mem& operator=(mem&&) noexcept;
     public:
-        mem_view view() const noexcept { return { m_bytes, static_cast<ptr>(m_bytes) + m_size }; }
+        inline mem_view view() const noexcept { return { m_bytes, static_cast<ptr>(m_bytes) + m_size }; }
     private:
         sz m_size;
         alloc_strat m_alloc_strat;
         void* m_bytes;
+    };
+
+    // Owning handle to an array of instances of type T, instantiated over a contiguous chunk of memory
+    // TODO: to be implemented
+    template <typename T>
+    class inst
+    {
+    public:
+        inst(mem_view view) : m_view{ view }, m_instances{}
+        {
+            sz count{  };
+            // TODO: check
+        }
+    private:
+        mem_view m_view;
+        T* m_instances;
+    };
+
+    // View on a contiguous chunk of memory, interpreted as an array of Ts
+    template <typename T>
+    class view
+    {
+    public:
+        inline view(void* start, void* end) : m_start{ static_cast<T*>(start) }, m_end{ static_cast<T*>(end) }
+        {
+            /*TODO: assert for start <= end*/
+            /*TODO: assert that the size of the raw view is a multiple of T*/
+        }
+        inline view(mem_view mview) : view{ mview.start(), mview.end() } {}
+    public:
+        T& operator[](sz i) { /*TODO: range check*/ return m_start[i]; }
+        const T& operator[](sz i) const { /*TODO: range check*/ return m_start[i]; }
+    public:
+        inline T* start() const noexcept { return m_start; }
+        inline T* end() const noexcept { return m_end; }
+        inline sz size() const noexcept { return static_cast<ptr>(static_cast<void*>(m_end)) - static_cast<ptr>(static_cast<void*>(m_start)); }
+        inline sz count() const noexcept { return m_end - m_start; }
+    private:
+        T* m_start;
+        T* m_end;
     };
 }
