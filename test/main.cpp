@@ -17,6 +17,7 @@ int main(void)
     core::alloc_strat alloc_strat{ .alloc = myalloc, .free = myfree };
     core::mem mem0{ core_sizeof(core::i32) * 5, alloc_strat };
     core::mem mem1{ core::move(mem0) };
+    core::view v0{ mem1.view() };
 
     return 0;
 }

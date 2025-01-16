@@ -25,11 +25,13 @@ namespace core
     // Signed size type
     using sz = decltype(static_cast<int*>(nullptr) - static_cast<int*>(nullptr));
 
+    // Generic pointer type
+    using ptr = char*;
+
     template<class T> struct remove_reference { typedef T type; };
     template<class T> struct remove_reference<T&> { typedef T type; };
     template<class T> struct remove_reference<T&&> { typedef T type; };
     template<class T> using remove_reference_t = typename remove_reference<T>::type;
-
     template< class T >
     constexpr remove_reference_t<T>&& move(T&& t) noexcept
     {
@@ -48,6 +50,20 @@ namespace core
         freefn free; // Deallocation function (optional)
     };
 
+    // View on a sequence of elements
+    template <class T>
+    class view
+    {
+    public:
+        view(T* start, T* end) noexcept : start{ start }, end{ end } {}
+    private:
+        T* start;
+        T* end;
+    };
+
+    // View on a raw chunk of memory
+    using mem_view = view<void>;
+
     // Owning handle to a chunk of memory
     class mem
     {
@@ -58,6 +74,8 @@ namespace core
         mem(mem&&) noexcept;
         mem& operator=(const mem&) = delete;
         mem& operator=(mem&&) noexcept;
+    public:
+        mem_view view() const noexcept { return { m_bytes, static_cast<ptr>(m_bytes) + m_size }; }
     private:
         sz m_size;
         alloc_strat m_alloc_strat;
