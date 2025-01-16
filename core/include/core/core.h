@@ -38,18 +38,6 @@ namespace core
         return static_cast<typename remove_reference<T>::type&&>(t);
     }
 
-    // Allocation function pointer
-    using allocfn = void* (*)(sz);
-    // Deallocation function pointer
-    using freefn = void (*)(void*);
-
-    // Allocation strategy
-    struct alloc_strat
-    {
-        allocfn alloc; // Allocation function (required)
-        freefn free; // Deallocation function (optional)
-    };
-
     // View on a contiguous chunk of memory
     class mem_view
     {
@@ -62,6 +50,18 @@ namespace core
     private:
         void* m_start;
         void* m_end;
+    };
+
+    // Allocation function pointer
+    using allocfn = void* (*)(sz);
+    // Deallocation function pointer
+    using freefn = void (*)(void*);
+
+    // Allocation strategy
+    struct alloc_strat
+    {
+        allocfn alloc; // Allocation function (required)
+        freefn free; // Deallocation function (optional)
     };
 
     // Owning handle to a contiguous chunk of memory
