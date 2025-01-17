@@ -18,6 +18,9 @@ int main(void)
     core::mem mem0{ core_sizeof(core::i32) * 5, alloc_strat };
     core::mem mem1{ core::move(mem0) };
     core::mem_view v0{ mem1.view() };
+    core::sz double_align{ core_alignof(double) };
+    core::mem_view v1{ v0.align<double>() };
+    core::sz v1_size{ v1.size() };
     core::view<core::i32> i32s{ v0 };
     core::sz i32s_count{ i32s.count() };
     core::sz i32s_size{ i32s.size() };

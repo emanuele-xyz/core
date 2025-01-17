@@ -1,6 +1,7 @@
 #pragma once
 
 #define core_sizeof(a) static_cast<::core::sz>(sizeof(a))
+#define core_alignof(t) static_cast<::core::sz>(alignof(t))
 
 namespace core
 {
@@ -32,10 +33,17 @@ namespace core
     template<typename T> struct remove_reference<T&> { typedef T type; };
     template<typename T> struct remove_reference<T&&> { typedef T type; };
     template<typename T> using remove_reference_t = typename remove_reference<T>::type;
-    template< typename T >
+    template<typename T>
     constexpr remove_reference_t<T>&& move(T&& t) noexcept
     {
         return static_cast<typename remove_reference<T>::type&&>(t);
+    }
+
+    // Clamp val between low and high
+    template <typename T>
+    T clamp(T val, T lo, T hi)
+    {
+        return val < lo ? lo : val > hi ? hi : val;
     }
 
     // View on a contiguous chunk of memory
@@ -47,6 +55,19 @@ namespace core
         inline void* start() const noexcept { return m_start; }
         inline void* end() const noexcept { return m_end; }
         inline sz size() const noexcept { return static_cast<ptr>(m_end) - static_cast<ptr>(m_start); }
+        inline bool is_empty() const noexcept { return size() == 0; }
+        inline mem_view align(sz align, sz elem_size) const noexcept
+        {
+            ptr const start{ static_cast<ptr>(m_start) };
+            ptr const end{ static_cast<ptr>(m_end) };
+            sz const lpad{ (start - static_cast<ptr>(nullptr)) % align };
+            ptr const aligned_start{ clamp(start + lpad, start, end) };
+            sz const rpad{ (end - aligned_start) % elem_size };
+            ptr const aligned_end{ clamp(end - rpad, aligned_start, end) };
+            return { aligned_start, aligned_end };
+        }
+        template <typename T>
+        inline mem_view align() const noexcept { return align(core_alignof(T), core_sizeof(T)); }
     private:
         void* m_start;
         void* m_end;
@@ -83,14 +104,14 @@ namespace core
     };
 
     // Owning handle to an array of instances of type T, instantiated over a contiguous chunk of memory
-    // TODO: to be implemented
     template <typename T>
     class inst
     {
     public:
         inst(mem_view view) : m_view{ view }, m_instances{}
         {
-            sz count{  };
+            /*TODO: assert that the size of the raw view is a multiple of T*/ // (size % t_size) == 0
+            /*TODO: align*/
         }
     private:
         mem_view m_view;
