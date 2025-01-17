@@ -91,7 +91,6 @@ namespace core
         inst(mem_view view) : m_view{ view }, m_instances{}
         {
             sz count{  };
-            // TODO: check
         }
     private:
         mem_view m_view;
@@ -103,12 +102,14 @@ namespace core
     class view
     {
     public:
-        inline view(void* start, void* end) : m_start{ static_cast<T*>(start) }, m_end{ static_cast<T*>(end) }
+        inline view(mem_view mview) : m_start{ static_cast<T*>(mview.start()) }, m_end{ static_cast<T*>(mview.end()) }
         {
-            /*TODO: assert for start <= end*/
             /*TODO: assert that the size of the raw view is a multiple of T*/
         }
-        inline view(mem_view mview) : view{ mview.start(), mview.end() } {}
+        inline view(void* start, void* end) : view{ {start, end} }
+        {
+            /*TODO: assert that the size of the raw view is a multiple of T*/
+        }
     public:
         T& operator[](sz i) { /*TODO: range check*/ return m_start[i]; }
         const T& operator[](sz i) const { /*TODO: range check*/ return m_start[i]; }

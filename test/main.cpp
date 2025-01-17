@@ -21,7 +21,7 @@ int main(void)
     core::view<core::i32> i32s{ v0 };
     core::sz i32s_count{ i32s.count() };
     core::sz i32s_size{ i32s.size() };
-    core::view<float> floats{ v0 };
+    core::view<float> floats{ v0.start(), v0.end() };
     core::sz floats_count{ floats.count() };
     core::sz floats_size{ floats.size() };
     i32s[0] = 0;
