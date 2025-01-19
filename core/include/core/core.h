@@ -23,11 +23,16 @@ namespace core
     static_assert(sizeof(u32) == 4, "sizeof(u32) != 4");
     static_assert(sizeof(u64) == 8, "sizeof(u64) != 8");
 
-    // Signed size type
-    using sz = decltype(static_cast<int*>(nullptr) - static_cast<int*>(nullptr));
-
     // Generic pointer type
     using ptr = char*;
+
+    // Signed size type
+    using sz = decltype(static_cast<ptr>(nullptr) - static_cast<ptr>(nullptr));
+
+    constexpr sz ptr_as_sz(ptr p)
+    {
+        return p - static_cast<ptr>(nullptr);
+    }
 
     template<typename T> struct remove_reference { typedef T type; };
     template<typename T> struct remove_reference<T&> { typedef T type; };
@@ -58,12 +63,12 @@ namespace core
         inline bool is_empty() const noexcept { return size() == 0; }
         inline mem_view align(sz align, sz elem_size) const noexcept
         {
-            ptr const start{ static_cast<ptr>(m_start) };
-            ptr const end{ static_cast<ptr>(m_end) };
-            sz const lpad{ (start - static_cast<ptr>(nullptr)) % align };
-            ptr const aligned_start{ clamp(start + lpad, start, end) };
-            sz const rpad{ (end - aligned_start) % elem_size };
-            ptr const aligned_end{ clamp(end - rpad, aligned_start, end) };
+            ptr start{ static_cast<ptr>(m_start) };
+            ptr end{ static_cast<ptr>(m_end) };
+            sz lpad{ (align - (ptr_as_sz(start) % align)) % align };
+            ptr aligned_start{ clamp(start + lpad, start, end) };
+            sz rpad{ (end - aligned_start) % elem_size };
+            ptr aligned_end{ clamp(end - rpad, aligned_start, end) };
             return { aligned_start, aligned_end };
         }
         template <typename T>
