@@ -130,14 +130,10 @@ namespace core
     public:
         inline view(mem_view mview) : m_start{ static_cast<T*>(mview.start()) }, m_end{ static_cast<T*>(mview.end()) }
         {
-            /*TODO: check for alignment requirements */
-            /*TODO: assert that the size of the raw view is a multiple of T. What happens if size is 0?*/
+            /*TODO: check for alignment requirements: start % core_alignof(T) == 0 && (end - start) % core_sizeof(T) == 0*/
+            /*TODO: what happens if size is 0?*/
         }
-        inline view(void* start, void* end) : view{ {start, end} }
-        {
-            /*TODO: check for alignment requirements */
-            /*TODO: assert that the size of the raw view is a multiple of T. What happens if size is 0?*/
-        }
+        inline view(void* start, void* end) : view{ {start, end} } {}
     public:
         T& operator[](sz i) { /*TODO: range check*/ return m_start[i]; }
         const T& operator[](sz i) const { /*TODO: range check*/ return m_start[i]; }
